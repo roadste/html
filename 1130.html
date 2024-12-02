@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>問答平台</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .question {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+        .question p {
+            margin-bottom: 10px;
+        }
+        .search-container {
+            margin: 20px 0;
+        }
+        
+        #searchInput {
+            padding: 8px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        #searchBtn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        #searchBtn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>問答平台</h1>
+
+    <h2>提問問題</h2>
+    <form id="questionForm">
+        <textarea id="questionContent" placeholder="請輸入你的問題"></textarea><br>
+        <button type="submit">提交問題</button>
+    </form>
+
+    <h2>問題列表</h2>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="搜尋問題關鍵字...">
+        <button id="searchBtn">搜尋</button>
+    </div>
+    <div id="questionsList"></div>
+
+    <script>
+        $(document).ready(function() {
+            // 加载问题
+            loadQuestions();
+
+            // 提交问题
+            $('#questionForm').submit(function(event) {
+                event.preventDefault();
+                var content = $('#questionContent').val();
+                $.ajax({
+                    url: 'submit_question.php',
+                    type: 'POST',
+                    data: {content: content},
+                    success: function(response) {
+                        loadQuestions(); // 提交成功后重新加载问题
+                        $('#questionContent').val(''); // 清空输入框
+                    }
+                });
+            });
+
+            // 加载问题
+            function loadQuestions() {
+                $.ajax({
+                    url: 'get_questions.php',
+                    type: 'GET',
+                    success: function(response) {
+                        $('#questionsList').html(response); // 动态显示问题
+                    }
+                });
+            }
+
+            // 添加刪除功能
+            $(document).on('click', '.delete-btn', function() {
+                if(confirm('確定要刪除這個問題嗎？')) {
+                    var id = $(this).data('id');
+                    console.log('Attempting to delete question with ID:', id); // 调试日志
+                    
+                    $.ajax({
+                        url: 'delete_question.php',
+                        type: 'POST',
+                        data: {id: id},
+                        success: function(response) {
+                            console.log('Server response:', response); // 调试日志
+                            if(response.includes('success')) {
+                                loadQuestions();
+                            } else {
+                                alert('删除失败: ' + response);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Ajax error:', error); // 调试日志
+                            alert('删除请求失败: ' + error);
+                        }
+                    });
+                }
+            });
+
+            // 添加搜尋功能
+            $('#searchBtn').click(function() {
+                performSearch();
+            });
+
+            // 按Enter鍵也可以搜尋
+            $('#searchInput').keypress(function(e) {
+                if(e.which == 13) {
+                    performSearch();
+                }
+            });
+
+            function performSearch() {
+                var keyword = $('#searchInput').val();
+                $.ajax({
+                    url: 'get_questions.php',
+                    type: 'GET',
+                    data: {keyword: keyword},
+                    success: function(response) {
+                        $('#questionsList').html(response);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
