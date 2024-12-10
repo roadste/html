@@ -64,6 +64,81 @@
         #searchBtn:hover {
             background-color: #45a049;
         }
+        
+        .reply-section {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        .reply-input {
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .reply-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .edit-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .replies {
+            margin-top: 10px;
+        }
+        
+        .reply {
+            margin: 5px 0;
+            padding: 8px;
+            background-color: #f5f5f5;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        /* 添加回復編輯相關樣式 */
+        .edit-reply-btn, .delete-reply-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 3px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        
+        .delete-reply-btn {
+            background-color: #ff4444;
+        }
+        
+        .reply-actions {
+            margin-top: 5px;
+        }
+        
+        .reply-edit-input {
+            width: 100%;
+            min-height: 40px;
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -85,32 +160,41 @@
 
     <script>
         $(document).ready(function() {
-            // 加载问题
+            // 頁面載入時立即載入問題列表
             loadQuestions();
 
-            // 提交问题
-            $('#questionForm').submit(function(event) {
-                event.preventDefault();
+            // 提交問題
+            $('#questionForm').submit(function(e) {
+                e.preventDefault();
                 var content = $('#questionContent').val();
+                
+                if (content.trim() === '') {
+                    alert('請輸入問題內容！');
+                    return;
+                }
+                
                 $.ajax({
                     url: 'submit_question.php',
                     type: 'POST',
                     data: {content: content},
                     success: function(response) {
-                        loadQuestions(); // 提交成功后重新加载问题
-                        $('#questionContent').val(''); // 清空输入框
+                        if (response.includes('success')) {
+                            $('#questionContent').val('');
+                            loadQuestions();
+                        } else {
+                            alert('提交失敗: ' + response);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('提交請求失敗: ' + error);
                     }
                 });
             });
 
-            // 加载问题
+            // 載入問題列表
             function loadQuestions() {
-                $.ajax({
-                    url: 'get_questions.php',
-                    type: 'GET',
-                    success: function(response) {
-                        $('#questionsList').html(response); // 动态显示问题
-                    }
+                $.get('get_questions.php', function(response) {
+                    $('#questionsList').html(response);
                 });
             }
 
@@ -163,6 +247,156 @@
                     }
                 });
             }
+
+            // 處理回復提交
+            $(document).on('click', '.reply-btn', function() {
+                var questionId = $(this).data('id');
+                var content = $(this).siblings('.reply-input').val();
+                
+                if (content.trim() === '') {
+                    alert('請輸入回復內容！');
+                    return;
+                }
+                
+                $.ajax({
+                    url: 'submit_reply.php',
+                    type: 'POST',
+                    data: {
+                        question_id: questionId,
+                        content: content
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            loadReplies(questionId);
+                            $('.reply-input').val(''); // 清空輸入框
+                        } else {
+                            alert('回復失敗：' + response.message);
+                        }
+                    }
+                });
+            });
+
+            // 處理編輯功能
+            $(document).on('click', '.edit-btn', function() {
+                var questionId = $(this).data('id');
+                var contentElement = $(this).siblings('.question-content');
+                var currentContent = contentElement.text();
+                
+                // 將內容轉換為輸入框
+                contentElement.html(`
+                    <textarea class="edit-input">${currentContent}</textarea>
+                    <button class="save-edit" data-id="${questionId}">保存</button>
+                    <button class="cancel-edit">取消</button>
+                `);
+            });
+
+            // 保存編輯
+            $(document).on('click', '.save-edit', function() {
+                var questionId = $(this).data('id');
+                var newContent = $(this).siblings('.edit-input').val();
+                var contentElement = $(this).closest('.question-content');
+                
+                $.ajax({
+                    url: 'edit_question.php',
+                    type: 'POST',
+                    data: {
+                        id: questionId,
+                        content: newContent
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            contentElement.html(newContent);
+                        } else {
+                            alert('編輯失敗：' + response.message);
+                        }
+                    }
+                });
+            });
+
+            // 取消編輯
+            $(document).on('click', '.cancel-edit', function() {
+                var contentElement = $(this).closest('.question-content');
+                var originalContent = contentElement.find('.edit-input').val();
+                contentElement.html(originalContent);
+            });
+
+            // 載入回復
+            function loadReplies(questionId) {
+                $.ajax({
+                    url: 'get_replies.php',
+                    type: 'GET',
+                    data: { question_id: questionId },
+                    success: function(response) {
+                        $('#replies-' + questionId).html(response);
+                    }
+                });
+            }
+
+            // 處理回復編輯
+            $(document).on('click', '.edit-reply-btn', function() {
+                var replyId = $(this).data('id');
+                var replyElement = $(this).closest('.reply');
+                var contentElement = replyElement.find('.reply-content');
+                var currentContent = contentElement.text();
+                
+                // 將內容轉換為輸入框
+                contentElement.html(`
+                    <textarea class="reply-edit-input">${currentContent}</textarea>
+                    <button class="save-reply-edit" data-id="${replyId}">保存</button>
+                    <button class="cancel-reply-edit">取消</button>
+                `);
+            });
+
+            // 保存回復編輯
+            $(document).on('click', '.save-reply-edit', function() {
+                var replyId = $(this).data('id');
+                var newContent = $(this).siblings('.reply-edit-input').val();
+                var contentElement = $(this).closest('.reply-content');
+                
+                $.ajax({
+                    url: 'edit_reply.php',
+                    type: 'POST',
+                    data: {
+                        id: replyId,
+                        content: newContent
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            contentElement.html(newContent);
+                        } else {
+                            alert('編輯失敗：' + response.message);
+                        }
+                    }
+                });
+            });
+
+            // 取消回復編輯
+            $(document).on('click', '.cancel-reply-edit', function() {
+                var contentElement = $(this).closest('.reply-content');
+                var originalContent = contentElement.find('.reply-edit-input').val();
+                contentElement.html(originalContent);
+            });
+
+            // 刪除回復
+            $(document).on('click', '.delete-reply-btn', function() {
+                if (confirm('確定要刪除這個回復嗎？')) {
+                    var replyId = $(this).data('id');
+                    var replyElement = $(this).closest('.reply');
+                    
+                    $.ajax({
+                        url: 'delete_reply.php',
+                        type: 'POST',
+                        data: { id: replyId },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                replyElement.remove();
+                            } else {
+                                alert('刪除失敗：' + response.message);
+                            }
+                        }
+                    });
+                }
+            });
         });
     </script>
 </body>

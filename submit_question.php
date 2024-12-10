@@ -1,18 +1,23 @@
 <?php
 require_once 'db_connect.php';
-//在文件頂部添加以下代碼來顯示錯誤
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['content'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $content = trim($_POST['content']);
     
+    if (empty($content)) {
+        echo "error: 問題內容不能為空";
+        exit;
+    }
+    
     try {
-        $stmt = $pdo->prepare("INSERT INTO questions (content) VALUES (?)");
-        $stmt->execute([$content]);
-        echo json_encode(['success' => true]);
-    } catch(PDOException $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        $stmt = $conn->prepare("INSERT INTO questions (content) VALUES (?)");
+        if ($stmt->execute([$content])) {
+            echo "success";
+        } else {
+            echo "error: 提交失敗";
+        }
+    } catch (Exception $e) {
+        echo "error: " . $e->getMessage();
     }
 }
 ?>

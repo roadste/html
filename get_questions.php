@@ -1,44 +1,37 @@
 <?php
-// 数据库连接
-$conn = new mysqli("localhost", "root", "", "qa_platform");
+require_once 'db_connect.php';
 
-// 检查连接
-if ($conn->connect_error) {
-    die("连接失败: " . $conn->connect_error);
-}
-
-// 获取搜索关键字
 $keyword = isset($_GET['keyword']) ? $_GET['keyword'] : '';
 
-// 准备SQL语句
 if (!empty($keyword)) {
-    // 如果有关键字，使用LIKE进行搜索
     $sql = "SELECT * FROM questions WHERE content LIKE ? ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
-    $searchTerm = "%" . $keyword . "%";
-    $stmt->bind_param("s", $searchTerm);
+    $searchTerm = "%$keyword%";
+    $stmt->execute([$searchTerm]);
 } else {
-    // 如果没有关键字，获取所有问题
     $sql = "SELECT * FROM questions ORDER BY created_at DESC";
     $stmt = $conn->prepare($sql);
+    $stmt->execute();
 }
 
-// 执行查询
-$stmt->execute();
 $result = $stmt->get_result();
 
-// 输出结果
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        echo "<div class='question'>";
-        echo "<p>" . htmlspecialchars($row['content']) . "</p>";
-        echo "<button class='delete-btn' data-id='" . $row['id'] . "'>删除</button>";
-        echo "</div>";
-    }
-} else {
-    echo "<p>没有找到相关问题</p>";
+while($row = $result->fetch_assoc()) {
+    echo "<div class='question' data-id='" . $row['id'] . "'>";
+    echo "<p class='question-content'>" . htmlspecialchars($row['content']) . "</p>";
+    
+    // 添加編輯按鈕
+    echo "<button class='edit-btn' data-id='" . $row['id'] . "'>編輯</button>";
+    echo "<button class='delete-btn' data-id='" . $row['id'] . "'>刪除</button>";
+    
+    // 添加回復區域
+    echo "<div class='reply-section'>";
+    echo "<textarea class='reply-input' placeholder='寫下你的回復...'></textarea>";
+    echo "<button class='reply-btn' data-id='" . $row['id'] . "'>回復</button>";
+    echo "</div>";
+    
+    // 回復列表容器
+    echo "<div class='replies' id='replies-" . $row['id'] . "'></div>";
+    echo "</div>";
 }
-
-$stmt->close();
-$conn->close();
 ?>

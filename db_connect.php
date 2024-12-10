@@ -1,17 +1,10 @@
 <?php
-$host = 'localhost';
-$dbname = 'qa_platform';
-$username = 'root';
-$password = '';
+$conn = new mysqli('127.0.0.1', 'root', '', 'qa_platform');
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    // echo "數據庫連接成功";  // 測試用
-} catch(PDOException $e) {
-    die("連接失敗: " . $e->getMessage());
+if ($conn->connect_error) {
+    die("連接失敗: " . $conn->connect_error);
 }
 
-// 確保 $pdo 可以被其他文件使用
-global $pdo;
+// 設置字符集
+$conn->set_charset("utf8mb4");
 ?> 
