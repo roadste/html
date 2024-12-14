@@ -6,157 +6,227 @@
     <title>問答平台</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        .question {
-            border: 1px solid #ddd;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
+        /* 整體樣式 */
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
         }
-        textarea {
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 標題樣式 */
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        /* 問題表單樣式 */
+        #questionForm {
+            margin-bottom: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        #questionContent {
             width: 100%;
             min-height: 100px;
-            margin-bottom: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            resize: vertical;
         }
+
+        /* 按鈕通用樣式 */
         button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
+            padding: 8px 16px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
         }
-        .delete-btn {
-            background-color: #ff4444;
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* 提交按鈕樣式 */
+        #questionForm button[type="submit"] {
+            background-color: #3498db;
             color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            width: 100%;
         }
-        .delete-btn:hover {
-            background-color: #cc0000;
-        }
-        .question p {
-            margin-bottom: 10px;
-        }
+
+        /* 搜索區域樣式 */
         .search-container {
             margin: 20px 0;
+            display: flex;
+            gap: 10px;
         }
-        
+
         #searchInput {
-            padding: 8px;
-            width: 300px;
+            flex: 1;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        #searchBtn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        /* 問題列表樣式 */
+        .question {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid #3498db;
+        }
+
+        .question-content {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .question-time {
+            color: #666;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* 編輯和刪除按鈕 */
+        .edit-btn {
+            background-color: #f39c12;
+            color: white;
             margin-right: 10px;
         }
-        
-        #searchBtn {
-            padding: 8px 15px;
-            background-color: #4CAF50;
+
+        .delete-btn {
+            background-color: #e74c3c;
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
         }
-        
-        #searchBtn:hover {
-            background-color: #45a049;
-        }
-        
+
+        /* 回復區域樣式 */
         .reply-section {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
-        
+
         .reply-input {
             width: 100%;
             min-height: 60px;
-            margin-bottom: 10px;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            resize: vertical;
         }
-        
+
         .reply-btn {
-            background-color: #4CAF50;
+            background-color: #2ecc71;
             color: white;
-            padding: 5px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
         }
-        
-        .edit-btn {
-            background-color: #2196F3;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        
-        .replies {
-            margin-top: 10px;
-        }
-        
+
+        /* 回復列表樣式 */
         .reply {
-            margin: 5px 0;
-            padding: 8px;
-            background-color: #f5f5f5;
-            border-left: 3px solid #4CAF50;
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #2ecc71;
         }
-        
-        /* 添加回復編輯相關樣式 */
-        .edit-reply-btn, .delete-reply-btn {
-            background-color: #2196F3;
-            color: white;
-            padding: 3px 8px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-right: 5px;
+
+        .reply-content {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .reply small {
+            color: #666;
             font-size: 12px;
         }
-        
+
+        /* 回復編輯按鈕 */
+        .edit-reply-btn {
+            background-color: #f39c12;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
         .delete-reply-btn {
-            background-color: #ff4444;
+            background-color: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
         }
-        
-        .reply-actions {
-            margin-top: 5px;
-        }
-        
-        .reply-edit-input {
-            width: 100%;
-            min-height: 40px;
-            margin: 5px 0;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <h1>問答平台</h1>
+    <div class="container">
+        <h2>問答平台</h2>
+        
+        <!-- 問題表單 -->
+        <form id="questionForm">
+            <textarea id="questionContent" placeholder="請輸入你的問題..."></textarea>
+            <button type="submit">發布問題</button>
+        </form>
 
-    <h2>提問問題</h2>
-    <form id="questionForm">
-        <textarea id="questionContent" placeholder="請輸入你的問題"></textarea><br>
-        <button type="submit">提交問題</button>
-    </form>
+        <!-- 搜索區域 -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="搜尋問題...">
+            <button id="searchBtn">搜尋</button>
+        </div>
 
-    <h2>問題列表</h2>
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="搜尋問題關鍵字...">
-        <button id="searchBtn">搜尋</button>
+        <!-- 問題列表 -->
+        <div id="questionsList"></div>
     </div>
-    <div id="questionsList"></div>
 
     <script>
         $(document).ready(function() {
@@ -224,7 +294,7 @@
                 }
             });
 
-            // 添加搜尋功能
+            // 添加搜尋��能
             $('#searchBtn').click(function() {
                 performSearch();
             });
